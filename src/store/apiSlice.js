@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { logout } from "./authSlice";
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:3000",
+  baseUrl: "https://audiblebooks-admin-backend.onrender.com",
   prepareHeaders: (headers, { getState }) => {
     headers.set("Content-Type", "application/json"); // Add Content-Type
 
