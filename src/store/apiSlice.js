@@ -45,10 +45,16 @@ export const apiSlice = createApi({
       }),
     }),
 
+    // getUsers: builder.query({
+    //   query: () => "/api/admin/userslist",
+    //   providesTags: ["User"],
+    // }),
     getUsers: builder.query({
-      query: () => "/api/admin/userslist",
+      query: ({ page = 1, limit = 5 }) =>
+        `/api/admin/userslist?page=${page}&limit=${limit}`,
       providesTags: ["User"],
     }),
+
     updateUsers: builder.mutation({
       query: (userData) => ({
         url: "/api/admin/updateusers",
@@ -72,8 +78,13 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ["User"],
     }),
+    // getAuthors: builder.query({
+    //   query: () => "/api/admin/authorslist",
+    //   providesTags: ["Author"],
+    // }),
     getAuthors: builder.query({
-      query: () => "/api/admin/authorslist",
+      query: ({ page = 1, limit = 5 }) =>
+        `/api/admin/authorslist?page=${page}&limit=${limit}`,
       providesTags: ["Author"],
     }),
     updateAuthors: builder.mutation({
