@@ -4,6 +4,9 @@
   padding: 2rem;
   text-align: center;
 }
+input[type="text"] {
+  color: black !important; /* Highly specific and forces white text */
+}
 
 .logo {
   height: 6em;

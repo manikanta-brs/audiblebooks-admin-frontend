@@ -1,1 +1,4 @@
 @import "tailwindcss";
+input[type="text"] {
+  color: white !important; /* Highly specific and forces white text */
+}

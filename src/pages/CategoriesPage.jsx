@@ -323,17 +323,17 @@ const CategoriesPage = () => {
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   placeholder="New category name"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  className="text-black shadow-sm bg-gray-800 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-900 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
                 <InputField
                   type="text"
                   value={newCategoryKeywords}
                   onChange={(e) => setNewCategoryKeywords(e.target.value)}
                   placeholder="New category keywords (comma separated)"
-                  className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  className="text-black shadow-sm bg-gray-800 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-900 dark:border-gray-600 dark:placeholder-gray-400 dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
               </StyledTableCell>
-              <StyledTableCell className="px-6 py-4 text-center">
+              <StyledTableCell className="px-6 py-4 text-center text-white">
                 <ActionButton onClick={handleAddCategory} disabled={isAdding}>
                   {isAdding ? "Adding..." : "Add"}
                 </ActionButton>
