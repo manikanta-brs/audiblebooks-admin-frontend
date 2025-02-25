@@ -49,10 +49,10 @@ const AuthorBooks = ({ authorId, authorName }) => {
     return <p>No audiobooks found for this author.</p>;
   }
 
-  const handleDelete = async (audiobookId) => {
+  const handleDelete = async (audiobook) => {
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: `You are about to delete the audiobook "${audiobook.title}" by ${authorName}. This action cannot be reverted!`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -61,7 +61,7 @@ const AuthorBooks = ({ authorId, authorName }) => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await deleteAudiobook(audiobookId).unwrap();
+          await deleteAudiobook(audiobook._id).unwrap();
           Swal.fire("Deleted!", "The audiobook has been deleted.", "success");
           // Optionally, you could refetch the data after deletion or update the UI locally
         } catch (err) {
@@ -131,7 +131,7 @@ const AuthorBooks = ({ authorId, authorName }) => {
                 <td className="border px-4 py-2">{audiobook.description}</td>
                 <td className="border px-4 py-2">
                   <button
-                    onClick={() => handleDelete(audiobook._id)}
+                    onClick={() => handleDelete(audiobook)}
                     className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
                     disabled={isDeleting}
                   >
