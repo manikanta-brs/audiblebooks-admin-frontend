@@ -61,7 +61,6 @@ export const apiSlice = createApi({
       providesTags: ["User"],
       transformResponse: (response) => {
         // console.log("Users API Response:", response);
-        console.log(`%c Ha ha Raavatledhaa..... 😅`, "color : #00ff00");
         const users = response?.users || [];
         const total = response?.total || 0;
         return { users, total }; // Changed totalPages to total
@@ -106,10 +105,7 @@ export const apiSlice = createApi({
       providesTags: ["Author"],
       transformResponse: (response) => {
         // console.log("Authors API Response:", response);
-        console.log(
-          `%c Abbe ivem ayye panulu kaaadhu brooo..........🤷‍♀️ `,
-          "color: #00ff00 "
-        );
+
         const authors = response?.authors || [];
         const total = response?.total || 0;
         return { authors, total };
@@ -179,10 +175,7 @@ export const apiSlice = createApi({
       providesTags: ["Category"],
       transformResponse: (response) => {
         // console.log("Categories API Response:", response);
-        console.log(
-          `%c Abbe ivem ayye panulu kaaadhu brooo..........🤷‍♀️ `,
-          "color: #00ff00 "
-        );
+
         const categories = response?.categories || [];
         const total = response?.total || 0;
         return { categories, total };

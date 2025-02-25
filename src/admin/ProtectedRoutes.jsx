@@ -6,8 +6,6 @@ import Navbar from "../components/Navbar"; // Import the Navbar component
 const ProtectedRoute = () => {
   const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
 
-  console.log(`%c Chuskovali kadha amma mari..`, "color:#00ff00"); // Debugging log
-
   if (!isLoggedIn) {
     return <Navigate to="/login" />;
   }
