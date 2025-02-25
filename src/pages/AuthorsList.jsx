@@ -363,7 +363,7 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 const AuthorList = () => {
   const [page, setPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 4;
   const [searchTerm, setSearchTerm] = useState("");
   const [showNoAuthorsMessage, setShowNoAuthorsMessage] = useState(false);
 
