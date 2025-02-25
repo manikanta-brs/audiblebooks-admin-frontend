@@ -86,17 +86,16 @@ const AuthorBooks = ({ authorId, authorName }) => {
 
       {/* Search Bar */}
       <div className="mb-4">
-        <label htmlFor="search" className="mr-2 text-black font-semibold">
+        <label
+          htmlFor="search"
+          className="block text-gray-700 text-sm font-bold mb-2"
+        >
           Search Books by this Author
         </label>
         <input
-          type="text"
-          id="search"
-          className="border rounded-xl py-3 px-4 w-full md:w-64 
-               bg-white/30 backdrop-blur-lg shadow-md 
-               focus:outline-none focus:ring-2 focus:ring-blue-400 
-               placeholder-black text-black"
-          placeholder="Search by title..."
+          type="search"
+          className="bg-black w-full text-white p-2 rounded-md"
+          placeholder="Search..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
