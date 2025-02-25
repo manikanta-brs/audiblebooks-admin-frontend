@@ -4,9 +4,11 @@ import { useSelector } from "react-redux";
 import Navbar from "../components/Navbar"; // Import the Navbar component
 
 const ProtectedRoute = () => {
-  const token = useSelector((state) => state.auth.token);
+  const isLoggedIn = useSelector((state) => state.auth.isLoggedIn);
 
-  if (!token) {
+  console.log(`%c Chuskovali kadha amma mari..`, "color:#00ff00"); // Debugging log
+
+  if (!isLoggedIn) {
     return <Navigate to="/login" />;
   }
 

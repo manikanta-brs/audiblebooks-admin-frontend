@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useGetAudiobooksofAuthorQuery,
   useDeleteAudiobookMutation,
@@ -17,15 +17,35 @@ const AuthorBooks = ({ authorId, authorName }) => {
   const [deleteAudiobook, { isLoading: isDeleting }] =
     useDeleteAudiobookMutation();
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredAudiobooks, setFilteredAudiobooks] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(5); // Initially show 5 books
+
   useEffect(() => {
-    console.log(`Audiobooks for author ${authorId}:`, audiobooks);
+    // console.log(`Audiobooks for author ${authorId}:`, audiobooks);
   }, [audiobooks, authorId]);
+
+  useEffect(() => {
+    if (audiobooks) {
+      setFilteredAudiobooks(audiobooks);
+      setVisibleCount(5); // Reset it to 5 when the initial data or the author ID changes
+    }
+  }, [audiobooks]);
+
+  useEffect(() => {
+    if (audiobooks) {
+      const results = audiobooks.filter((audiobook) =>
+        audiobook.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredAudiobooks(results);
+    }
+  }, [searchTerm, audiobooks]);
 
   if (isLoading) return <p>Loading audiobooks...</p>;
   if (isError)
     return <p>Error: {error?.message || "Failed to load audiobooks"}</p>;
 
-  if (!audiobooks || !Array.isArray(audiobooks) || audiobooks.length === 0) {
+  if (!audiobooks || !Array.isArray(audiobooks)) {
     return <p>No audiobooks found for this author.</p>;
   }
 
@@ -52,11 +72,36 @@ const AuthorBooks = ({ authorId, authorName }) => {
     });
   };
 
+  const handleShowMore = () => {
+    setVisibleCount((prevCount) => prevCount + 5); // Increment by 5
+  };
+
+  const displayedAudiobooks = filteredAudiobooks.slice(0, visibleCount);
+
   return (
     <div>
       <h3 className="text-lg font-semibold mb-2">
         Audiobooks by this Author: {authorName}
       </h3>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <label htmlFor="search" className="mr-2 text-black font-semibold">
+          Search Books by this Author
+        </label>
+        <input
+          type="text"
+          id="search"
+          className="border rounded-xl py-3 px-4 w-full md:w-64 
+               bg-white/30 backdrop-blur-lg shadow-md 
+               focus:outline-none focus:ring-2 focus:ring-blue-400 
+               placeholder-black text-black"
+          placeholder="Search by title..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
       <table className="table-auto w-full">
         <thead>
           <tr className="bg-gray-200">
@@ -67,24 +112,49 @@ const AuthorBooks = ({ authorId, authorName }) => {
           </tr>
         </thead>
         <tbody>
-          {audiobooks.map((audiobook) => (
-            <tr key={audiobook._id} className="hover:bg-gray-100">
-              <td className="border px-4 py-2">{audiobook.title}</td>
-              <td className="border px-4 py-2">{audiobook.category}</td>
-              <td className="border px-4 py-2">{audiobook.description}</td>
-              <td className="border px-4 py-2">
-                <button
-                  onClick={() => handleDelete(audiobook._id)}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? "Deleting..." : "Delete"}
-                </button>
+          {displayedAudiobooks.length === 0 && searchTerm !== "" ? (
+            <tr>
+              <td colSpan="4" className="border px-4 py-2 text-center">
+                No audiobooks found matching your search.
               </td>
             </tr>
-          ))}
+          ) : displayedAudiobooks.length === 0 ? (
+            <tr>
+              <td colSpan="4" className="border px-4 py-2 text-center">
+                No audiobooks found for this author.
+              </td>
+            </tr>
+          ) : (
+            displayedAudiobooks.map((audiobook) => (
+              <tr key={audiobook._id} className="hover:bg-gray-100">
+                <td className="border px-4 py-2">{audiobook.title}</td>
+                <td className="border px-4 py-2">{audiobook.category}</td>
+                <td className="border px-4 py-2">{audiobook.description}</td>
+                <td className="border px-4 py-2">
+                  <button
+                    onClick={() => handleDelete(audiobook._id)}
+                    className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete"}
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
+
+      {filteredAudiobooks.length > visibleCount && (
+        <div className="text-center mt-4">
+          <button
+            onClick={handleShowMore}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Show More
+          </button>
+        </div>
+      )}
     </div>
   );
 };

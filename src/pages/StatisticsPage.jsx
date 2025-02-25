@@ -6,6 +6,7 @@ import {
 } from "../store/apiSlice";
 import { Chart, registerables } from "chart.js";
 import { Line, Bar, Pie } from "react-chartjs-2";
+import SingleDoughnutComponent from "./Doughnut";
 
 Chart.register(...registerables);
 
@@ -285,6 +286,7 @@ const StatisticsPage = () => {
           </div>
         </div>
       </div>
+      <SingleDoughnutComponent />
     </div>
   );
 };

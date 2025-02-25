@@ -14,13 +14,17 @@
 //   const [page, setPage] = useState(1);
 //   const itemsPerPage = 5;
 //   const [searchTerm, setSearchTerm] = useState("");
-//   const [filteredAuthors, setFilteredAuthors] = useState([]);
+//   const [showNoAuthorsMessage, setShowNoAuthorsMessage] = useState(false);
 
 //   const [selectedAuthorId, setSelectedAuthorId] = useState(null);
 //   const [selectedAuthorName, setSelectedAuthorName] = useState(null);
-//   const [showAuthorBooks, setShowAuthorBooks] = useState(false); // State to control visibility of AuthorBooks component
+//   const [showAuthorBooks, setShowAuthorBooks] = useState(false);
 
-//   const { data, isLoading, isError, error } = useGetAuthorsQuery();
+//   const { data, isLoading, isError, error, refetch } = useGetAuthorsQuery({
+//     page: page,
+//     limit: itemsPerPage,
+//     searchTerm: searchTerm,
+//   });
 
 //   const [deleteAuthor, { isLoading: isDeleting }] = useDeleteAuthorMutation();
 //   const [updateAuthors, { isLoading: isUpdating }] = useUpdateAuthorsMutation();
@@ -30,44 +34,46 @@
 //   const [editedLastName, setEditedLastName] = useState("");
 
 //   const authors = data?.authors || [];
-
-//   useEffect(() => {
-//     const filtered = authors.filter(
-//       (author) =>
-//         author.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//         author.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//         author.email.toLowerCase().includes(searchTerm.toLowerCase())
-//     );
-//     setFilteredAuthors(filtered);
-//     setPage(1); // Reset to first page on search
-//   }, [searchTerm, authors]);
-
-//   if (isLoading) return <p>Loading authors...</p>;
-//   if (isError) return <p>Error: {error?.message}</p>;
-
-//   if (!Array.isArray(authors) || authors.length === 0) {
-//     return <p>No authors found.</p>;
-//   }
-
-//   const totalAuthors = filteredAuthors.length; // Use filtered length
+//   const totalAuthors = data?.total || 0;
 //   const totalPages = Math.ceil(totalAuthors / itemsPerPage);
 
-//   const startIndex = (page - 1) * itemsPerPage;
-//   const endIndex = startIndex + itemsPerPage;
-//   const paginatedAuthors = filteredAuthors.slice(startIndex, endIndex); // Paginate filtered authors
+//   useEffect(() => {
+//     const handler = setTimeout(() => {
+//       refetch({ page: 1, searchTerm: searchTerm });
+//     }, 300);
+
+//     return () => clearTimeout(handler);
+//   }, [searchTerm, refetch]);
+
+//   useEffect(() => {
+//     if (!isLoading && !isError) {
+//       setShowNoAuthorsMessage(authors.length === 0);
+//     }
+//   }, [isLoading, isError, authors.length]);
+
+//   const handleSearchChange = (e) => {
+//     setSearchTerm(e.target.value);
+//   };
+
+//   const handleClearSearch = () => {
+//     setSearchTerm("");
+//     setPage(1);
+//     refetch({ page: 1, searchTerm: "" });
+//   };
 
 //   const handlePageChange = (newPage) => {
 //     setPage(newPage);
+//     refetch({ page: newPage, searchTerm: searchTerm });
 //   };
 
 //   const handleAuthorClick = (authorId, authorName) => {
 //     setSelectedAuthorId(authorId);
 //     setSelectedAuthorName(authorName);
-//     setShowAuthorBooks(true); // Show AuthorBooks component on author click
+//     setShowAuthorBooks(true);
 //   };
 
 //   const handleCloseAuthorBooks = () => {
-//     setShowAuthorBooks(false); // Hide AuthorBooks component
+//     setShowAuthorBooks(false);
 //   };
 
 //   const handleDelete = async (authorId) => {
@@ -84,8 +90,9 @@
 //         try {
 //           await deleteAuthor(authorId).unwrap();
 //           setSelectedAuthorId(null);
-//           setShowAuthorBooks(false); // Hide AuthorBooks component if it was open
+//           setShowAuthorBooks(false);
 //           Swal.fire("Deleted!", "The author has been deleted.", "success");
+//           refetch({ page: page, searchTerm: searchTerm });
 //         } catch (err) {
 //           console.error("Failed to delete author:", err);
 //           toast.error("Failed to delete author.");
@@ -117,17 +124,20 @@
 //       setEditedFirstName("");
 //       setEditedLastName("");
 //       toast.success("Author updated successfully!");
+//       refetch({ page: page, searchTerm: searchTerm });
 //     } catch (err) {
 //       console.error("Failed to update author:", err);
 //       toast.error("Failed to update author.");
 //     }
 //   };
 
+//   if (isLoading) return <p>Loading authors...</p>;
+//   if (isError) return <p>Error: {error?.message}</p>;
+
 //   return (
 //     <div>
 //       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Author List</h2>
 
-//       {/* Search Bar */}
 //       <div className="mb-4">
 //         <label
 //           htmlFor="search"
@@ -159,17 +169,14 @@
 //             className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 //             placeholder="Search by name or email..."
 //             value={searchTerm}
-//             onChange={(e) => setSearchTerm(e.target.value)}
+//             onChange={handleSearchChange}
 //             required
 //           />
 //           {searchTerm && (
 //             <button
 //               type="button"
 //               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-//               onClick={() => {
-//                 setSearchTerm("");
-//                 setPage(1);
-//               }}
+//               onClick={handleClearSearch}
 //             >
 //               <svg
 //                 className="w-4 h-4"
@@ -212,7 +219,7 @@
 //             </tr>
 //           </thead>
 //           <tbody>
-//             {paginatedAuthors.map((author) => (
+//             {authors.map((author) => (
 //               <tr
 //                 key={author._id}
 //                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -298,6 +305,10 @@
 //         </table>
 //       </div>
 
+//       {showNoAuthorsMessage && (
+//         <p>No authors found matching the search criteria.</p>
+//       )}
+
 //       <div className="flex justify-between mt-6">
 //         <button
 //           onClick={() => handlePageChange(page - 1)}
@@ -337,6 +348,7 @@
 // };
 
 // export default AuthorList;
+
 import React, { useState, useEffect } from "react";
 import {
   useGetAuthorsQuery,
@@ -351,18 +363,19 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 const AuthorList = () => {
   const [page, setPage] = useState(1);
-  const itemsPerPage = 5; //Number of records per page.
+  const itemsPerPage = 5;
   const [searchTerm, setSearchTerm] = useState("");
-  //const [filteredAuthors, setFilteredAuthors] = useState([]); //Remove unncessary state
+  const [showNoAuthorsMessage, setShowNoAuthorsMessage] = useState(false);
 
   const [selectedAuthorId, setSelectedAuthorId] = useState(null);
   const [selectedAuthorName, setSelectedAuthorName] = useState(null);
-  const [showAuthorBooks, setShowAuthorBooks] = useState(false); // State to control visibility of AuthorBooks component
+  const [showAuthorBooks, setShowAuthorBooks] = useState(false);
 
-  const { data, isLoading, isError, error } = useGetAuthorsQuery({
+  const { data, isLoading, isError, error, refetch } = useGetAuthorsQuery({
     page: page,
     limit: itemsPerPage,
-  }); // Use the page and limit
+    searchTerm: searchTerm,
+  });
 
   const [deleteAuthor, { isLoading: isDeleting }] = useDeleteAuthorMutation();
   const [updateAuthors, { isLoading: isUpdating }] = useUpdateAuthorsMutation();
@@ -376,47 +389,42 @@ const AuthorList = () => {
   const totalPages = Math.ceil(totalAuthors / itemsPerPage);
 
   useEffect(() => {
-    //No longer filter after getting the API Data, instead, filter on the server when the time is right.
-    // const filtered = authors.filter(
-    //   (author) =>
-    //     author.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //     author.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //     author.email.toLowerCase().includes(searchTerm.toLowerCase())
-    // );
-    // setFilteredAuthors(filtered);
-    setPage(1); // Reset to first page on search. Keep this since we are going to filter in API
+    const handler = setTimeout(() => {
+      refetch({ page: 1, searchTerm: searchTerm });
+    }, 300);
 
-    //TODO
-    //Change the API to accept search term and implement the filtering there.
-  }, [searchTerm]);
+    return () => clearTimeout(handler);
+  }, [searchTerm, refetch]);
 
-  if (isLoading) return <p>Loading authors...</p>;
-  if (isError) return <p>Error: {error?.message}</p>;
+  useEffect(() => {
+    if (!isLoading && !isError) {
+      setShowNoAuthorsMessage(authors.length === 0);
+    }
+  }, [isLoading, isError, authors.length]);
 
-  if (!Array.isArray(authors) || authors.length === 0) {
-    return <p>No authors found.</p>;
-  }
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
-  //   const totalAuthors = filteredAuthors.length; // Use filtered length //Not Necessary
-  //   const totalPages = Math.ceil(totalAuthors / itemsPerPage);
-
-  //   const startIndex = (page - 1) * itemsPerPage;
-  //   const endIndex = startIndex + itemsPerPage;
-  //   const paginatedAuthors = filteredAuthors.slice(startIndex, endIndex); // Paginate filtered authors //Not Necessary
-  //const paginatedAuthors = filteredAuthors.slice(startIndex, endIndex); // Paginate filtered authors
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setPage(1);
+    refetch({ page: 1, searchTerm: "" });
+  };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
+    refetch({ page: newPage, searchTerm: searchTerm });
   };
 
   const handleAuthorClick = (authorId, authorName) => {
     setSelectedAuthorId(authorId);
     setSelectedAuthorName(authorName);
-    setShowAuthorBooks(true); // Show AuthorBooks component on author click
+    setShowAuthorBooks(true);
   };
 
   const handleCloseAuthorBooks = () => {
-    setShowAuthorBooks(false); // Hide AuthorBooks component
+    setShowAuthorBooks(false);
   };
 
   const handleDelete = async (authorId) => {
@@ -433,8 +441,9 @@ const AuthorList = () => {
         try {
           await deleteAuthor(authorId).unwrap();
           setSelectedAuthorId(null);
-          setShowAuthorBooks(false); // Hide AuthorBooks component if it was open
+          setShowAuthorBooks(false);
           Swal.fire("Deleted!", "The author has been deleted.", "success");
+          refetch({ page: page, searchTerm: searchTerm });
         } catch (err) {
           console.error("Failed to delete author:", err);
           toast.error("Failed to delete author.");
@@ -466,17 +475,21 @@ const AuthorList = () => {
       setEditedFirstName("");
       setEditedLastName("");
       toast.success("Author updated successfully!");
+      refetch({ page: page, searchTerm: searchTerm });
     } catch (err) {
       console.error("Failed to update author:", err);
       toast.error("Failed to update author.");
     }
   };
 
+  if (isLoading) return <p>Loading authors...</p>;
+  if (isError) return <p>Error: {error?.message}</p>;
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Author List</h2>
 
-      {/* Search Bar */}
+      {/* Search Input */}
       <div className="mb-4">
         <label
           htmlFor="search"
@@ -508,17 +521,14 @@ const AuthorList = () => {
             className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Search by name or email..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             required
           />
           {searchTerm && (
             <button
               type="button"
               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-              onClick={() => {
-                setSearchTerm("");
-                setPage(1);
-              }}
+              onClick={handleClearSearch}
             >
               <svg
                 className="w-4 h-4"
@@ -539,23 +549,24 @@ const AuthorList = () => {
         </div>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <table className="w-full table-auto text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-24">
                 ID
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-32">
                 First Name
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-32">
                 Last Name
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-48">
                 Email
               </th>
-              <th scope="col" className="px-6 py-3 text-center">
+              <th scope="col" className="px-6 py-3 w-48 text-center">
                 Actions
               </th>
             </tr>
@@ -597,7 +608,8 @@ const AuthorList = () => {
                 <td className="px-6 py-4">{author.email}</td>
                 <td className="px-6 py-4 text-center">
                   {editingAuthorId === author._id ? (
-                    <>
+                    // Edit Mode Buttons
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => handleSaveEdit(author._id)}
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
@@ -607,13 +619,14 @@ const AuthorList = () => {
                       </button>
                       <button
                         onClick={handleCancelEdit}
-                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 ml-2"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
                         Cancel
                       </button>
-                    </>
+                    </div>
                   ) : (
-                    <>
+                    // View Mode Buttons
+                    <div className="flex justify-center gap-2">
                       <button
                         onClick={() => handleEdit(author)}
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -627,18 +640,18 @@ const AuthorList = () => {
                             author.first_name + " " + author.last_name
                           )
                         }
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 ml-2"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         View Books
                       </button>
                       <button
                         onClick={() => handleDelete(author._id)}
-                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 ml-2 disabled:opacity-50"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
                         disabled={isDeleting}
                       >
                         {isDeleting ? "Deleting..." : "Delete"}
                       </button>
-                    </>
+                    </div>
                   )}
                 </td>
               </tr>
@@ -647,6 +660,11 @@ const AuthorList = () => {
         </table>
       </div>
 
+      {showNoAuthorsMessage && (
+        <p>No authors found matching the search criteria.</p>
+      )}
+
+      {/* Pagination */}
       <div className="flex justify-between mt-6">
         <button
           onClick={() => handlePageChange(page - 1)}

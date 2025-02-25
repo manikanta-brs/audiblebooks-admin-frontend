@@ -1,4 +1,4 @@
-// import React, { useState, useEffect, useCallback } from "react";
+// import React, { useState, useEffect } from "react";
 // import {
 //   useGetUsersQuery,
 //   useUpdateUsersMutation,
@@ -13,58 +13,49 @@
 //   const [page, setPage] = useState(1);
 //   const itemsPerPage = 5;
 //   const [searchTerm, setSearchTerm] = useState("");
-//   const [filteredUsers, setFilteredUsers] = useState([]);
+//   const [showNoUsersMessage, setShowNoUsersMessage] = useState(false);
 
-//   const { data, isLoading, isError, error } = useGetUsersQuery({ skip: false }); //Fetch data by default.
+//   const { data, isLoading, isError, error, refetch } = useGetUsersQuery({
+//     page: page,
+//     limit: itemsPerPage,
+//     searchTerm: searchTerm,
+//   });
 
 //   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 //   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation();
 
 //   const [editingUserId, setEditingUserId] = useState(null);
-//   const [editedFirstName, setEditedFirstName] = useState("");
-//   const [editedLastName, setEditedLastName] = useState("");
+//   const [editedUser, setEditedUser] = useState({
+//     firstName: "",
+//     lastName: "",
+//   });
 
 //   const users = data?.users || [];
-
-//   // Debounced setSearchTerm function
-//   const debouncedSetSearchTerm = useCallback((value) => {
-//     let timeoutId;
-//     return () => {
-//       clearTimeout(timeoutId);
-//       timeoutId = setTimeout(() => {
-//         setSearchTerm(value);
-//         setPage(1);
-//       }, 300); // Adjust the delay (in ms) as needed
-//     };
-//   }, []);
+//   const totalUsers = data?.total || 0;
+//   const totalPages = Math.ceil(totalUsers / itemsPerPage);
 
 //   useEffect(() => {
-//     if (data?.users) {
-//       //Only filter if data is available
-//       const filtered = data.users.filter(
-//         (user) =>
-//           user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//           user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-//           user.email.toLowerCase().includes(searchTerm.toLowerCase())
-//       );
-//       setFilteredUsers(filtered);
+//     const handler = setTimeout(() => {
+//       refetch({ page: 1, searchTerm: searchTerm });
+//     }, 300);
+
+//     return () => clearTimeout(handler);
+//   }, [searchTerm, refetch]);
+
+//   useEffect(() => {
+//     if (!isLoading && !isError) {
+//       setShowNoUsersMessage(users.length === 0);
 //     }
-//   }, [searchTerm, data]);
-//   if (isLoading) return <p>Loading users...</p>;
-//   if (isError) return <p>Error: {error?.message}</p>;
+//   }, [isLoading, isError, users.length]);
 
-//   if (!Array.isArray(users) || users.length === 0) {
-//     return <p>No users found.</p>;
-//   }
-
-//   const totalUsers = filteredUsers.length;
-//   const totalPages = Math.ceil(totalUsers / itemsPerPage);
-//   const startIndex = (page - 1) * itemsPerPage;
-//   const endIndex = startIndex + itemsPerPage;
-//   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+//   const handleSearchChange = (e) => {
+//     setSearchTerm(e.target.value);
+//     setPage(1);
+//   };
 
 //   const handlePageChange = (newPage) => {
 //     setPage(newPage);
+//     refetch({ page: newPage, searchTerm: searchTerm });
 //   };
 
 //   const handleDelete = async (userId) => {
@@ -81,11 +72,15 @@
 //         try {
 //           await deleteUser(userId).unwrap();
 //           Swal.fire("Deleted!", "The user has been deleted.", "success");
+//           if (users.length === 1 && page > 1) {
+//             setPage(page - 1);
+//           }
+//           refetch({ page: page, searchTerm: searchTerm });
 //         } catch (err) {
 //           console.error("Failed to delete user:", err);
 //           toast.error(
 //             "Failed to delete user: " + (err?.message || err?.toString())
-//           ); // Show more descriptive error
+//           );
 //         }
 //       }
 //     });
@@ -93,34 +88,41 @@
 
 //   const handleEdit = (user) => {
 //     setEditingUserId(user._id);
-//     setEditedFirstName(user.first_name);
-//     setEditedLastName(user.last_name);
+//     setEditedUser({ firstName: user.first_name, lastName: user.last_name });
 //   };
 
 //   const handleCancelEdit = () => {
 //     setEditingUserId(null);
-//     setEditedFirstName("");
-//     setEditedLastName("");
+//     setEditedUser({ firstName: "", lastName: "" });
 //   };
 
 //   const handleSaveEdit = async (user) => {
 //     try {
 //       await updateUsers({
-//         userId: user._id, // Corrected: Use user._id
-//         first_name: editedFirstName,
-//         last_name: editedLastName,
+//         userId: user._id,
+//         first_name: editedUser.firstName,
+//         last_name: editedUser.lastName,
 //       }).unwrap();
 //       setEditingUserId(null);
-//       setEditedFirstName("");
-//       setEditedLastName("");
+//       setEditedUser({ firstName: "", lastName: "" });
 //       toast.success("User updated successfully!");
+//       refetch({ page: page, searchTerm: searchTerm });
 //     } catch (err) {
 //       console.error("Failed to update user:", err);
 //       toast.error(
 //         "Failed to update user: " + (err?.message || err?.toString())
-//       ); // Show more descriptive error
+//       );
 //     }
 //   };
+
+//   const handleClearSearch = () => {
+//     setSearchTerm("");
+//     setPage(1);
+//     refetch({ page: 1, searchTerm: "" });
+//   };
+
+//   if (isLoading) return <p>Loading users...</p>;
+//   if (isError) return <p>Error: {error?.message}</p>;
 
 //   return (
 //     <div>
@@ -157,19 +159,15 @@
 //             className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 //             placeholder="Search by name or email..."
 //             value={searchTerm}
-//             onChange={(e) => {
-//               debouncedSetSearchTerm(e.target.value)(); // call the debounced function
-//             }}
+//             onChange={handleSearchChange}
 //             required
 //           />
+
 //           {searchTerm && (
 //             <button
 //               type="button"
 //               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-//               onClick={() => {
-//                 setSearchTerm("");
-//                 setPage(1);
-//               }}
+//               onClick={handleClearSearch}
 //             >
 //               <svg
 //                 className="w-4 h-4"
@@ -212,7 +210,7 @@
 //             </tr>
 //           </thead>
 //           <tbody>
-//             {paginatedUsers.map((user) => (
+//             {users.map((user) => (
 //               <tr
 //                 key={user._id}
 //                 className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -225,16 +223,26 @@
 //                     <td className="px-6 py-4">
 //                       <input
 //                         type="text"
-//                         value={editedFirstName}
-//                         onChange={(e) => setEditedFirstName(e.target.value)}
+//                         value={editedUser.firstName}
+//                         onChange={(e) =>
+//                           setEditedUser({
+//                             ...editedUser,
+//                             firstName: e.target.value,
+//                           })
+//                         }
 //                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 //                       />
 //                     </td>
 //                     <td className="px-6 py-4">
 //                       <input
 //                         type="text"
-//                         value={editedLastName}
-//                         onChange={(e) => setEditedLastName(e.target.value)}
+//                         value={editedUser.lastName}
+//                         onChange={(e) =>
+//                           setEditedUser({
+//                             ...editedUser,
+//                             lastName: e.target.value,
+//                           })
+//                         }
 //                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
 //                       />
 //                     </td>
@@ -250,7 +258,7 @@
 //                   {editingUserId === user._id ? (
 //                     <>
 //                       <button
-//                         onClick={() => handleSaveEdit(user)} // Corrected: Pass the user object
+//                         onClick={() => handleSaveEdit(user)}
 //                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
 //                         disabled={isUpdating}
 //                       >
@@ -287,12 +295,16 @@
 //         </table>
 //       </div>
 
+//       {showNoUsersMessage && (
+//         <p>No users found matching the search criteria.</p>
+//       )}
+
 //       <div className="flex justify-between mt-6">
 //         <button
 //           onClick={() => handlePageChange(page - 1)}
 //           disabled={page === 1}
 //           className="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
-//           aria-label="Previous Page" // Added aria-label
+//           aria-label="Previous Page"
 //         >
 //           Previous
 //         </button>
@@ -303,7 +315,7 @@
 //           onClick={() => handlePageChange(page + 1)}
 //           disabled={page === totalPages}
 //           className="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
-//           aria-label="Next Page" // Added aria-label
+//           aria-label="Next Page"
 //         >
 //           Next
 //         </button>
@@ -313,7 +325,8 @@
 // };
 
 // export default UserList;
-import React, { useState, useEffect, useCallback } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   useGetUsersQuery,
   useUpdateUsersMutation,
@@ -326,60 +339,51 @@ import "sweetalert2/dist/sweetalert2.min.css";
 
 const UserList = () => {
   const [page, setPage] = useState(1);
-  const itemsPerPage = 5; // Moved back into the component
+  const itemsPerPage = 5;
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState([]); //Unnecessary
+  const [showNoUsersMessage, setShowNoUsersMessage] = useState(false);
 
-  const { data, isLoading, isError, error } = useGetUsersQuery({
+  const { data, isLoading, isError, error, refetch } = useGetUsersQuery({
     page: page,
     limit: itemsPerPage,
+    searchTerm: searchTerm,
   });
 
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
   const [updateUsers, { isLoading: isUpdating }] = useUpdateUsersMutation();
 
   const [editingUserId, setEditingUserId] = useState(null);
-  const [editedFirstName, setEditedFirstName] = useState("");
-  const [editedLastName, setEditedLastName] = useState("");
+  const [editedUser, setEditedUser] = useState({
+    firstName: "",
+    lastName: "",
+  });
 
   const users = data?.users || [];
   const totalUsers = data?.total || 0;
   const totalPages = Math.ceil(totalUsers / itemsPerPage);
 
-  // Debounced setSearchTerm function
-  const debouncedSetSearchTerm = useCallback((value) => {
-    let timeoutId;
-    return () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setSearchTerm(value);
-        setPage(1);
-      }, 300); // Adjust the delay (in ms) as needed
-    };
-  }, []);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      refetch({ page: 1, searchTerm: searchTerm });
+    }, 300);
+
+    return () => clearTimeout(handler);
+  }, [searchTerm, refetch]);
 
   useEffect(() => {
-    //Since you now get ALL users from the api on each page, this filtering step is wrong
-    //  if (data?.users) {
-    //   //Only filter if data is available
-    //   const filtered = data.users.filter(
-    //     (user) =>
-    //       user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //       user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    //       user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    //   );
-    //   setFilteredUsers(filtered);
-    // }
-  }, [searchTerm, data]);
+    if (!isLoading && !isError) {
+      setShowNoUsersMessage(users.length === 0);
+    }
+  }, [isLoading, isError, users.length]);
 
-  //   const totalUsers = filteredUsers.length; // Not needed with backend pagination
-  // const totalPages = Math.ceil(totalUsers / itemsPerPage); //Handled by server
-  // const startIndex = (page - 1) * itemsPerPage; //Not Needed
-  // const endIndex = startIndex + itemsPerPage; //Not Needed
-  // const paginatedUsers = filteredUsers.slice(startIndex, endIndex); //Not Needed
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+  };
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
+    refetch({ page: newPage, searchTerm: searchTerm });
   };
 
   const handleDelete = async (userId) => {
@@ -396,11 +400,15 @@ const UserList = () => {
         try {
           await deleteUser(userId).unwrap();
           Swal.fire("Deleted!", "The user has been deleted.", "success");
+          if (users.length === 1 && page > 1) {
+            setPage(page - 1);
+          }
+          refetch({ page: page, searchTerm: searchTerm });
         } catch (err) {
           console.error("Failed to delete user:", err);
           toast.error(
             "Failed to delete user: " + (err?.message || err?.toString())
-          ); // Show more descriptive error
+          );
         }
       }
     });
@@ -408,41 +416,41 @@ const UserList = () => {
 
   const handleEdit = (user) => {
     setEditingUserId(user._id);
-    setEditedFirstName(user.first_name);
-    setEditedLastName(user.last_name);
+    setEditedUser({ firstName: user.first_name, lastName: user.last_name });
   };
 
   const handleCancelEdit = () => {
     setEditingUserId(null);
-    setEditedFirstName("");
-    setEditedLastName("");
+    setEditedUser({ firstName: "", lastName: "" });
   };
 
   const handleSaveEdit = async (user) => {
     try {
       await updateUsers({
-        userId: user._id, // Corrected: Use user._id
-        first_name: editedFirstName,
-        last_name: editedLastName,
+        userId: user._id,
+        first_name: editedUser.firstName,
+        last_name: editedUser.lastName,
       }).unwrap();
       setEditingUserId(null);
-      setEditedFirstName("");
-      setEditedLastName("");
+      setEditedUser({ firstName: "", lastName: "" });
       toast.success("User updated successfully!");
+      refetch({ page: page, searchTerm: searchTerm });
     } catch (err) {
       console.error("Failed to update user:", err);
       toast.error(
         "Failed to update user: " + (err?.message || err?.toString())
-      ); // Show more descriptive error
+      );
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setPage(1);
+    refetch({ page: 1, searchTerm: "" });
   };
 
   if (isLoading) return <p>Loading users...</p>;
   if (isError) return <p>Error: {error?.message}</p>;
-
-  if (!Array.isArray(users) || users.length === 0) {
-    return <p>No users found.</p>;
-  }
 
   return (
     <div>
@@ -479,19 +487,15 @@ const UserList = () => {
             className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             placeholder="Search by name or email..."
             value={searchTerm}
-            onChange={(e) => {
-              debouncedSetSearchTerm(e.target.value)(); // call the debounced function
-            }}
+            onChange={handleSearchChange}
             required
           />
+
           {searchTerm && (
             <button
               type="button"
               className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-              onClick={() => {
-                setSearchTerm("");
-                setPage(1);
-              }}
+              onClick={handleClearSearch}
             >
               <svg
                 className="w-4 h-4"
@@ -516,19 +520,29 @@ const UserList = () => {
         <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
           <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
             <tr>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-24">
+                {" "}
+                {/* Adjust width here */}
                 ID
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-32">
+                {" "}
+                {/* Adjust width here */}
                 First Name
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-32">
+                {" "}
+                {/* Adjust width here */}
                 Last Name
               </th>
-              <th scope="col" className="px-6 py-3">
+              <th scope="col" className="px-6 py-3 w-48">
+                {" "}
+                {/* Adjust width here */}
                 Email
               </th>
-              <th scope="col" className="px-6 py-3 text-center">
+              <th scope="col" className="px-6 py-3 text-center w-48">
+                {" "}
+                {/* Adjust width here */}
                 Actions
               </th>
             </tr>
@@ -547,16 +561,26 @@ const UserList = () => {
                     <td className="px-6 py-4">
                       <input
                         type="text"
-                        value={editedFirstName}
-                        onChange={(e) => setEditedFirstName(e.target.value)}
+                        value={editedUser.firstName}
+                        onChange={(e) =>
+                          setEditedUser({
+                            ...editedUser,
+                            firstName: e.target.value,
+                          })
+                        }
                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       />
                     </td>
                     <td className="px-6 py-4">
                       <input
                         type="text"
-                        value={editedLastName}
-                        onChange={(e) => setEditedLastName(e.target.value)}
+                        value={editedUser.lastName}
+                        onChange={(e) =>
+                          setEditedUser({
+                            ...editedUser,
+                            lastName: e.target.value,
+                          })
+                        }
                         className="shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                       />
                     </td>
@@ -572,7 +596,7 @@ const UserList = () => {
                   {editingUserId === user._id ? (
                     <>
                       <button
-                        onClick={() => handleSaveEdit(user)} // Corrected: Pass the user object
+                        onClick={() => handleSaveEdit(user)}
                         className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50"
                         disabled={isUpdating}
                       >
@@ -609,12 +633,16 @@ const UserList = () => {
         </table>
       </div>
 
+      {showNoUsersMessage && (
+        <p>No users found matching the search criteria.</p>
+      )}
+
       <div className="flex justify-between mt-6">
         <button
           onClick={() => handlePageChange(page - 1)}
           disabled={page === 1}
           className="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
-          aria-label="Previous Page" // Added aria-label
+          aria-label="Previous Page"
         >
           Previous
         </button>
@@ -625,7 +653,7 @@ const UserList = () => {
           onClick={() => handlePageChange(page + 1)}
           disabled={page === totalPages}
           className="bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 disabled:opacity-50"
-          aria-label="Next Page" // Added aria-label
+          aria-label="Next Page"
         >
           Next
         </button>

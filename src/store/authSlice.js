@@ -14,6 +14,7 @@ const storedIsAuthorLogin = localStorage.getItem("isAuthorLogin")
 
 const initialState = {
   token: storedToken || null,
+  isLoggedIn: !!storedToken,
   isAuthorLogin: storedIsAuthorLogin || false,
   userData: storedUserData || null,
   profileData: storedProfileData || null,
@@ -26,6 +27,7 @@ const authSlice = createSlice({
     login: (state, action) => {
       const { token, isAuthorLogin, userData, profileData } = action.payload;
       state.token = token;
+      state.isLoggedIn = true;
       state.isAuthorLogin = isAuthorLogin;
       state.userData = userData;
       state.profileData = profileData;
@@ -38,6 +40,7 @@ const authSlice = createSlice({
     },
     logout: (state) => {
       state.token = null;
+      state.isLoggedIn = false;
       state.isAuthorLogin = false;
       state.userData = null;
       state.profileData = null;
@@ -52,5 +55,4 @@ const authSlice = createSlice({
 });
 
 export const { login, logout } = authSlice.actions;
-
 export default authSlice.reducer;

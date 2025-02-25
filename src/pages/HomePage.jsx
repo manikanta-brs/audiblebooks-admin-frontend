@@ -5,7 +5,6 @@ import {
   useGetNumberOfAudiobooksQuery,
 } from "../store/apiSlice.js";
 import StatisticsPage from "./StatisticsPage.jsx";
-import BubbleStatisticsPage from "./BubbleStatisticsPage.jsx";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import Sidebar from "../components/Sidebar.jsx";
@@ -151,8 +150,6 @@ const Dashboard = () => {
       </Section>
 
       <StatisticsPage />
-
-      <BubbleStatisticsPage />
     </>
   );
 };
