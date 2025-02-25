@@ -8,6 +8,7 @@ import StatisticsPage from "./StatisticsPage.jsx";
 import styled from "styled-components";
 import { motion } from "framer-motion";
 import Sidebar from "../components/Sidebar.jsx";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 // Styled Components
 const HomePageContainer = styled(motion.div)`
@@ -43,6 +44,7 @@ const StatisticCard = styled(motion.div)`
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-radius: 0.75rem; /* rounded-xl */
   padding: 1.5rem;
+  cursor: pointer; // Add cursor pointer to indicate clickability
 `;
 
 // Framer Motion Variants
@@ -82,6 +84,20 @@ const Dashboard = () => {
     isError: audiobooksError,
   } = useGetNumberOfAudiobooksQuery();
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  const handleUserClick = () => {
+    navigate("/users");
+  };
+
+  const handleAuthorClick = () => {
+    navigate("/authors");
+  };
+
+  const handleAudiobookClick = () => {
+    navigate("/audiobooks");
+  };
+
   return (
     <>
       <Section>
@@ -94,6 +110,7 @@ const Dashboard = () => {
             fromColor="#3b82f6"
             toColor="#4f46e5"
             variants={itemVariants}
+            onClick={handleUserClick} // Add onClick handler
           >
             <motion.h3 className="text-lg font-semibold">Total Users</motion.h3>
             {usersLoading ? (
@@ -112,6 +129,7 @@ const Dashboard = () => {
             fromColor="#10b981"
             toColor="#14b8a6"
             variants={itemVariants}
+            onClick={handleAuthorClick} // Add onClick handler
           >
             <motion.h3 className="text-lg font-semibold">
               Total Authors
@@ -132,6 +150,7 @@ const Dashboard = () => {
             fromColor="#8b5cf6"
             toColor="#db2777"
             variants={itemVariants}
+            onClick={handleAudiobookClick} // Add onClick handler
           >
             <motion.h3 className="text-lg font-semibold">
               Total Audiobooks
